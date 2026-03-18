@@ -1,0 +1,37 @@
+name: Book Skedda Seat
+
+on:
+  schedule:
+    # Run daily at 00:05 SGT (16:05 UTC previous day)
+    # Singapore is UTC+8, so 00:05 SGT = 16:05 UTC
+    - cron: "5 16 * * *"
+  workflow_dispatch: # Allow manual trigger from GitHub UI
+
+jobs:
+  book:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          playwright install chromium
+          playwright install-deps chromium
+
+      - name: Run booking script
+        env:
+          SKEDDA_URL: ${{ secrets.SKEDDA_URL }}
+          SKEDDA_EMAIL: ${{ secrets.SKEDDA_EMAIL }}
+          SKEDDA_PASS: ${{ secrets.SKEDDA_PASS }}
+          SPACE_ID: ${{ secrets.SPACE_ID }}
+          SEAT_NAME: ${{ secrets.SEAT_NAME }}
+          BOOKING_START: "09:00"
+          BOOKING_END: "18:00"
+          DAYS_AHEAD: "12"
+          BOOKING_DAYS: "0,3,4"
+        run: python book_seat.py
